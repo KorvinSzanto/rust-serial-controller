@@ -15,9 +15,7 @@ jobs:
             override: true
             components: rustfmt, clippy
       - name: Run cargo build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build --release
+        run: cargo build --release
       - name: Build a zip
         run: |
           mkdir temp;
