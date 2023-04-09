@@ -1,4 +1,6 @@
 # Rust serial controller
+[![.github/workflows/build.yml](https://github.com/KorvinSzanto/rust-serial-controller/actions/workflows/build.yml/badge.svg)](https://github.com/KorvinSzanto/rust-serial-controller/actions/workflows/build.yml)
+
 This package exists to connect a WLED enabled microcontroller connected via USB to Razer Chroma.
 
 ### Configuration

@@ -5,6 +5,7 @@ on:
 
 jobs:
   release:
+    if: github.event_name == 'release'
     name: Release
     runs-on: ubuntu-latest
     steps:
