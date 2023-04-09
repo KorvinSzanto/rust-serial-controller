@@ -1,7 +1,7 @@
-use std::fmt::Display;
-use std::path::PathBuf;
 use guid::GUID;
 use libloading::Library;
+use std::fmt::Display;
+use std::path::PathBuf;
 
 #[allow(dead_code)]
 #[derive(Display)]
@@ -26,9 +26,9 @@ pub enum RzResult {
     NotValidState = 5023,
     InsufficientAccessRights = 8344,
     NoMoreItems = 259,
-    Failed = 2147483647
+    Failed = 2147483647,
 }
- 
+
 #[allow(dead_code)]
 #[derive(Display)]
 #[repr(C)]
@@ -46,21 +46,22 @@ pub enum RzStatus {
 }
 
 pub struct Chroma {
-    lib: Library
+    lib: Library,
 }
 
 impl Chroma {
-
     pub fn init(id: GUID, dll: Option<String>) -> Chroma {
         // load lib
         let sdk_path = match dll {
-            Some(dll) => PathBuf::from(dll),  
-            None => PathBuf::from(std::env::var_os("ProgramFiles").unwrap()).join("Razer/ChromaBroadcast/bin/RzChromaBroadcastAPI64.dll"),
+            Some(dll) => PathBuf::from(dll),
+            None => PathBuf::from(std::env::var_os("ProgramFiles").unwrap())
+                .join("Razer/ChromaBroadcast/bin/RzChromaBroadcastAPI64.dll"),
         };
         let lib = unsafe { libloading::Library::new(sdk_path).expect("Unable to load lib") };
 
         unsafe {
-            let func: libloading::Symbol<unsafe extern fn(uuid: GUID) -> RzResult> = lib.get(b"Init").expect("Init symbol loading failed.");
+            let func: libloading::Symbol<unsafe extern "C" fn(uuid: GUID) -> RzResult> =
+                lib.get(b"Init").expect("Init symbol loading failed.");
             func(id);
         }
 
@@ -69,21 +70,32 @@ impl Chroma {
 
     pub fn uninit(&mut self) -> RzResult {
         unsafe {
-            let func: libloading::Symbol<unsafe extern fn() -> RzResult> = self.lib.get(b"UnInit").expect("UnInit symbol loading failed.");
+            let func: libloading::Symbol<unsafe extern "C" fn() -> RzResult> = self
+                .lib
+                .get(b"UnInit")
+                .expect("UnInit symbol loading failed.");
             func()
         }
     }
 
-    pub fn register_event_notification(&mut self, callback: unsafe extern fn(RzType, *const i32)) -> RzResult {
+    pub fn register_event_notification(
+        &mut self,
+        callback: unsafe extern "C" fn(RzType, *const i32),
+    ) -> RzResult {
         unsafe {
-            let func: libloading::Symbol<unsafe extern fn(unsafe extern fn(RzType, *const i32)) -> RzResult> = self.lib.get(b"RegisterEventNotification").unwrap();
+            let func: libloading::Symbol<
+                unsafe extern "C" fn(unsafe extern "C" fn(RzType, *const i32)) -> RzResult,
+            > = self.lib.get(b"RegisterEventNotification").unwrap();
             func(callback)
         }
     }
 
     pub fn unregister_event_notification(&mut self) -> RzResult {
         unsafe {
-            let func: libloading::Symbol<unsafe extern fn() -> RzResult> = self.lib.get(b"UnRegisterEventNotification").expect("UnInit symbol loading failed.");
+            let func: libloading::Symbol<unsafe extern "C" fn() -> RzResult> = self
+                .lib
+                .get(b"UnRegisterEventNotification")
+                .expect("UnInit symbol loading failed.");
             func()
         }
     }

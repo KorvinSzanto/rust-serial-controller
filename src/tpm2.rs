@@ -1,4 +1,4 @@
-use palette::{rgb::Rgb, encoding::Srgb};
+use palette::{encoding::Srgb, rgb::Rgb};
 
 pub const TPM2_START: u8 = 0xC9;
 const TPM2_TYPE_DATA: u8 = 0xDA;
@@ -15,7 +15,7 @@ pub fn ping() -> Vec<u8> {
 
 pub fn pack_type(colors: &[Rgb<Srgb, u8>], kind: u8) -> Vec<u8> {
     let mut packet: Vec<u8> = vec![];
-    
+
     // Add the header
     packet.push(TPM2_START);
     packet.push(kind);

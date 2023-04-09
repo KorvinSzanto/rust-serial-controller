@@ -1,17 +1,19 @@
-use std::{time::Duration, io::{Write, Read, self}};
-use serialport::{COMPort, StopBits, SerialPort};
+use serialport::{COMPort, SerialPort, StopBits};
+use std::{
+    io::{self, Read, Write},
+    time::Duration,
+};
 
 pub struct WLED {
     pub leds: usize,
-    port: COMPort
+    port: COMPort,
 }
 
 impl WLED {
-
-    pub fn new(com: &str) -> WLED {
+    pub fn new(com: &str, baud_rate: u32) -> WLED {
         let mut serial = WLED {
             leds: 0,
-            port: WLED::connect(com)
+            port: WLED::connect(com, baud_rate),
         };
 
         if let Ok(count) = serial.count_leds() {
@@ -21,8 +23,8 @@ impl WLED {
         serial
     }
 
-    fn connect(com: &str) -> COMPort {
-        serialport::new(com, 230_400)
+    fn connect(com: &str, baud_rate: u32) -> COMPort {
+        serialport::new(com, baud_rate)
             .timeout(Duration::from_millis(100))
             .stop_bits(StopBits::One)
             .open_native()
@@ -32,9 +34,13 @@ impl WLED {
     fn count_leds(&mut self) -> Result<usize, Error> {
         let mut serial_buf: Vec<u8> = vec![];
 
-        self.port.write_data_terminal_ready(true).expect("Unable to set terminal ready.");
+        self.port
+            .write_data_terminal_ready(true)
+            .expect("Unable to set terminal ready.");
 
-        self.port.write(r#"l"#.as_bytes()).expect("Unable to write to port.");
+        self.port
+            .write(r#"l"#.as_bytes())
+            .expect("Unable to write to port.");
         self.port.flush().expect("Failed to flush");
 
         if let Ok(_) = self.port.read_to_end(&mut serial_buf) {
@@ -55,13 +61,14 @@ impl WLED {
             }
         }
 
-        self.port.write_data_terminal_ready(false)
-            .expect("Unable to set terminal ready.");    
+        self.port
+            .write_data_terminal_ready(false)
+            .expect("Unable to set terminal ready.");
 
         Ok(count)
     }
-    
-    pub fn send_message(&mut self, msg: WLEDMessage) -> Result<usize, Error>  {
+
+    pub fn send_message(&mut self, msg: WLEDMessage) -> Result<usize, Error> {
         let data = match msg {
             WLEDMessage::Raw(packet) => packet,
             WLEDMessage::On => r#"{"on":true}"#.as_bytes().to_vec(),
